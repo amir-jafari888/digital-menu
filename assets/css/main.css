@@ -1,0 +1,10 @@
+.page {
+    width: min(100% - 2rem, 960px);
+    margin-inline: auto;
+    padding-block: 3rem;
+}
+
+.page p {
+    color: var(--color-muted);
+    line-height: 1.8;
+}
