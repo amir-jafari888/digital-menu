@@ -1,0 +1,13 @@
+# Initial Apache rules. Review against your hosting setup before deployment.
+Options -Indexes
+
+# Prevent direct access to sensitive project directories.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(config|storage|app)(/|$) - [F,L,NC]
+</IfModule>
+
+# Do not expose common private or environment files.
+<FilesMatch "(^\.env|\.ini$|\.log$|\.sql$|\.bak$|\.dist$)">
+    Require all denied
+</FilesMatch>
