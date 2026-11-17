@@ -1,0 +1,28 @@
+# Local-only tooling and design skills (not part of the product build)
+/.agents/
+/.taste-skill/
+/.audit/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.local.php
+
+# Runtime output (keep the folder markers)
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/uploads/*
+!/storage/uploads/.gitkeep
+
+# Dependencies / build output (future-proofing)
+/node_modules/
+/vendor/
+/dist/

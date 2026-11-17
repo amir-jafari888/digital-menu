@@ -1,38 +1,61 @@
-# Digital Menu
+# منوچی — Digital Menu
 
-A lightweight, multi-tenant digital menu and order-management service built with custom PHP MVC architecture, inspired by the structure of Nivad Store.
+سرویس منوی دیجیتال، سفارش‌گیری و باشگاه مشتریان برای کافه و رستوران، به‌همراه
+تبلیغات در اپ «سراغ». رابط عمومی سایت با PHP ساده و طراحی مبتنی بر
+**Material Design 3** ساخته شده است.
 
-## Project status
+## وضعیت پروژه
 
-Initial project scaffold. Business logic and production configuration are not implemented yet.
+لایه‌ی نمایش عمومی (صفحات سایت) آماده است. منطق تجاری، پایگاه داده، احراز هویت
+و درگاه پرداخت هنوز پیاده‌سازی نشده‌اند؛ فرم‌های ورود، ثبت‌نام و تماس فعلاً
+اسکلت رابط کاربری هستند و اطلاعات را ذخیره نمی‌کنند.
 
-## Initial scope
+## صفحات عمومی
 
-- Step-by-step menu creation
-- Public digital menu and QR access
-- Product and category management
-- Customer cart and order submission
-- Business dashboard and order status management
-- Subscription plans and verified online subscription payments
-- Tenant data isolation
+| مسیر | توضیح |
+| --- | --- |
+| `index.php` | صفحه‌ی اصلی (هیرو، امکانات، وفاداری، تبلیغات، تعرفه، سوالات) |
+| `features.php` | امکانات و جزئیات سرویس |
+| `loyalty.php` | باشگاه مشتریان و سطح‌بندی |
+| `advertising.php` | تبلیغات در اپ سراغ |
+| `pricing.php` | تعرفه‌ها و جدول مقایسه |
+| `how-it-works.php` | مسیر سه‌مرحله‌ای ساخت منو |
+| `faq.php` | سوالات متداول |
+| `contact.php` | فرم تماس (نمایشی) |
+| `login.php` / `register.php` | ورود و ثبت‌نام (نمایشی) |
+| `terms.php` / `privacy.php` | قوانین و حریم خصوصی |
 
-## Structure
+## ساختار
 
-- `app/` — core application layers
-- `admin/` — business management areas
-- `api/` — API endpoints
-- `assets/` — CSS, JavaScript, images, and fonts
-- `config/` — application configuration
-- `pages/` — page templates
-- `partials/` — shared view fragments
-- `routes/` — route definitions
-- `storage/` — logs and uploads
-- `tests/` — tests
+- `config/app.php` — بوت‌استرپ، ثابت‌های سایت، توابع آدرس‌دهی (`url()`, `asset()`)
+- `partials/` — هدر، فوتر، هیروی صفحات داخلی، آیکون‌ها، بلوک تعرفه
+- `assets/css/system.css` — توکن‌ها و کامپوننت‌های Material Design 3
+- `assets/css/main.css` — چیدمان صفحه‌ی اصلی و صفحات داخلی
+- `assets/js/main.js` — نوار بالا، شیت منوی موبایل، اسکرول‌ریویل، تعرفه، سبد نمایشی
+- `app/`, `admin/`, `api/`, `pages/`, `routes/`, `storage/`, `tests/` — اسکلت بک‌اند
 
-## Security requirements
+## آدرس‌دهی
 
-Before production, implement authentication and authorization, tenant isolation, prepared SQL statements, CSRF protection, secure session settings, upload validation, secret management, and server-side payment verification.
+همه‌ی لینک‌ها از `url()` و `asset()` استفاده می‌کنند و مسیر نصب را از
+`$_SERVER['SCRIPT_NAME']` تشخیص می‌دهند؛ بنابراین سایت هم در ریشه‌ی دامنه
+(`/`) و هم در زیرپوشه (`/digital-menu-latest/`) کار می‌کند.
 
-## Development
+## اجرای محلی
 
-See the README files in `config/`, `routes/`, `storage/`, and `tests/` for directory-specific notes.
+```bash
+php -S 127.0.0.1:8091 -t .
+```
+
+سپس `http://127.0.0.1:8091/` را باز کنید. (روی XAMPP می‌توانید پوشه را زیر
+`htdocs` قرار دهید.)
+
+## نکات امنیتی پیش از انتشار
+
+احراز هویت و مجوزدهی، جداسازی داده‌ی هر کسب‌وکار، کوئری‌های آماده‌شده، محافظت
+CSRF، تنظیمات امن نشست، اعتبارسنجی آپلود، مدیریت اسرار و تأیید سمت‌سرور پرداخت
+باید پیاده‌سازی شوند.
+
+## توسعه
+
+یادداشت‌های هر پوشه در `config/README.md`، `routes/README.md`،
+`storage/README.md` و `tests/README.md` قرار دارد.
