@@ -1,26 +1,67 @@
 <?php
 declare(strict_types=1);
 
-require __DIR__ . '/config/app.php';
+require __DIR__ . '/app/bootstrap.php';
 require __DIR__ . '/partials/icons.php';
 
-$sent   = false;
-$errors = [];
+use App\Core\Auth;
+use App\Core\Csrf;
+use App\Core\RateLimiter;
+use App\Core\Request;
+use App\Core\Response;
+use App\Core\Security;
+use App\Core\Session;
+
+/**
+ * Only local, single-slash paths are accepted as a post-login destination.
+ * Anything else (absolute URLs, //host, protocol-relative, header injection)
+ * falls back to the panel, so `next` can never become an open redirect.
+ */
+function login_next_path(string $raw): string
+{
+    $raw = trim($raw);
+    if ($raw === '' || !str_starts_with($raw, '/') || str_starts_with($raw, '//')) {
+        return '';
+    }
+    if (preg_match('/[\x00-\x1F\x7F\\\\]/', $raw)) {
+        return '';
+    }
+
+    return $raw;
+}
+
+Security::headers();
+Session::start();
+RateLimiter::prune();
+
+if (Auth::check()) {
+    Response::redirect(admin_url());
+}
+
+$errors     = [];
 $identifier = '';
+$next       = login_next_path(Request::query('next'));
+$notice     = Session::getFlash('auth_notice');
 
-if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
-    $identifier = trim((string) ($_POST['identifier'] ?? ''));
-    $password   = (string) ($_POST['password'] ?? '');
+if (Request::isPost()) {
+    Csrf::assert();
 
-    if ($identifier === '') {
-        $errors[] = 'ایمیل یا شماره موبایل را وارد کن.';
-    }
-    if ($password === '') {
-        $errors[] = 'رمز عبور را وارد کن.';
-    }
-    if (!$errors) {
-        // Authentication is not implemented yet; this is a UI scaffold.
-        $sent = true;
+    $identifier = Request::string('identifier');
+    $password   = (string) Request::input('password', '');
+    $next       = login_next_path(Request::string('next'));
+
+    if ($identifier === '' || $password === '') {
+        $errors[] = 'ایمیل/شماره موبایل و رمز عبور را وارد کن.';
+    } elseif (mb_strlen($identifier) > 190 || mb_strlen($password) > 200) {
+        $errors[] = 'اطلاعات ورود معتبر نیست.';
+    } else {
+        $result = Auth::attempt($identifier, $password);
+
+        if ($result['ok']) {
+            Response::redirect($next !== '' ? $next : admin_url());
+        }
+
+        $errors[] = (string) ($result['message'] ?? 'ورود انجام نشد.');
     }
 }
 
@@ -54,31 +95,34 @@ require __DIR__ . '/partials/header.php';
                     <p>ایمیل یا شماره موبایل و رمز عبورت را وارد کن.</p>
                 </div>
 
-                <?php if ($sent): ?>
-                    <div class="notice"><?= icon('check-circle', 20) ?><span>اطلاعات دریافت شد. ورود واقعی بعد از اتصال بک‌اند فعال می‌شود.</span></div>
+                <?php if (is_string($notice) && $notice !== ''): ?>
+                    <div class="notice"><?= icon('clock', 20) ?><span><?= e($notice) ?></span></div>
                 <?php endif; ?>
                 <?php if ($errors): ?>
-                    <div class="notice" style="background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);">
+                    <div class="notice" style="background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);" role="alert">
                         <?= icon('bolt', 20) ?><span><?= e(implode(' ', $errors)) ?></span>
                     </div>
                 <?php endif; ?>
 
-                <form class="auth-form" method="post" action="<?= url('login.php') ?>">
+                <form class="auth-form" method="post" action="<?= e(url('login.php')) ?>">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="next" value="<?= e($next) ?>">
+
                     <div class="field">
                         <label for="identifier">ایمیل یا شماره موبایل</label>
-                        <input class="field__control" id="identifier" name="identifier" type="text" inputmode="email" autocomplete="username" value="<?= e($identifier) ?>" required>
+                        <input class="field__control" id="identifier" name="identifier" type="text" inputmode="email" autocomplete="username" value="<?= e($identifier) ?>" maxlength="190" required>
                     </div>
                     <div class="field">
                         <label for="password">رمز عبور</label>
-                        <input class="field__control" id="password" name="password" type="password" autocomplete="current-password" required>
+                        <input class="field__control" id="password" name="password" type="password" autocomplete="current-password" maxlength="200" required>
                     </div>
                     <label class="checkbox"><input type="checkbox" name="remember" value="1"><span>مرا به خاطر بسپار</span></label>
                     <button class="m3-button m3-button--filled m3-button--lg m3-button--block" type="submit">ورود <?= icon('arrow', 18, 'btn-arrow') ?></button>
                 </form>
 
                 <div class="auth-divider">یا</div>
-                <p class="auth-switch">حساب نداری؟ <a href="<?= url('register.php') ?>">ساخت حساب رایگان</a></p>
-                <p class="auth-switch">رمزت را فراموش کردی؟ <a href="<?= url('contact.php') ?>">با پشتیبانی تماس بگیر</a></p>
+                <p class="auth-switch">حساب نداری؟ <a href="<?= e(url('register.php')) ?>">ساخت حساب رایگان</a></p>
+                <p class="auth-switch">رمزت را فراموش کردی؟ <a href="<?= e(url('contact.php')) ?>">با پشتیبانی تماس بگیر</a></p>
             </div>
         </div>
     </div>

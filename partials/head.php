@@ -48,12 +48,7 @@ $ogImage     = $page['og_image'] ?? asset('images/og-cover.png');
     <link rel="stylesheet" href="<?= asset('css/main.css') ?>">
 
     <!-- Entrance motion is opt-in: the page stands complete without this script. -->
-    <script>
-        document.documentElement.classList.add('m-enter');
-        setTimeout(function () {
-            document.documentElement.classList.add('m-enter-done');
-        }, 1150);
-    </script>
+    <script src="<?= asset('js/boot.js') ?>" defer></script>
 </head>
 
 <body class="page-<?= e($active ?: 'home') ?>">

@@ -26,11 +26,39 @@ const SITE_DESCRIPTION = 'منوچی منوی دیجیتال کافه و رست�
  */
 function app_base(): string
 {
-    $script = $_SERVER['SCRIPT_NAME'] ?? '/index.php';
-    $dir    = str_replace('\\', '/', dirname($script));
-    $dir    = rtrim($dir, '/');
+    static $base = null;
+    if ($base !== null) {
+        return $base;
+    }
 
-    return $dir === '' ? '' : $dir;
+    $norm = static fn (string $p): string => rtrim(str_replace('\\', '/', $p), '/');
+
+    // Resolve the install folder from the filesystem, so front controllers in
+    // sub-directories (/admin/index.php, /api/index.php) still produce root URLs.
+    $docRoot = $norm((string) realpath((string) ($_SERVER['DOCUMENT_ROOT'] ?? '')));
+    $appRoot = $norm((string) realpath(dirname(__DIR__)));
+
+    if ($docRoot !== '' && $appRoot !== '' && $appRoot === $docRoot) {
+        return $base = '';
+    }
+    if ($docRoot !== '' && $appRoot !== '' && str_starts_with($appRoot, $docRoot . '/')) {
+        return $base = substr($appRoot, strlen($docRoot));
+    }
+
+    // Fallback for CLI or unusual setups: derive it from the script path.
+    $dir = $norm(str_replace('\\', '/', dirname((string) ($_SERVER['SCRIPT_NAME'] ?? '/index.php'))));
+    foreach (['/admin', '/api'] as $sub) {
+        if ($dir === $sub) {
+            $dir = '';
+            break;
+        }
+        if (str_ends_with($dir, $sub)) {
+            $dir = substr($dir, 0, -strlen($sub));
+            break;
+        }
+    }
+
+    return $base = $dir;
 }
 
 /** Build an absolute-path URL that respects the install location. */
