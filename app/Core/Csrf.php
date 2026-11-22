@@ -101,7 +101,10 @@ final class Csrf
         $isApi = str_contains(str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? ''), '/api/');
 
         if (!headers_sent()) {
-            http_response_code(419);
+            // 419 is not in Apache's built-in status table, and mod_php maps an
+            // unknown numeric status to 500. Send the status line explicitly so
+            // the client still sees 419.
+            header('HTTP/1.1 419 Authentication Timeout', true, 419);
             header('Content-Type: ' . ($isApi ? 'application/json; charset=UTF-8' : 'text/html; charset=UTF-8'));
             header('Cache-Control: no-store');
         }
